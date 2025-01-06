@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:weatherapp/data/image_path.dart';
+import 'package:weatherapp/services/location_provider.dart';
 import 'package:weatherapp/utils/apptext.dart';
 
 class HomePage extends StatefulWidget {
@@ -11,12 +13,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    Provider.of<LocationProvider>(context, listen: false).determinePosition();
+    super.initState();
+  }
+
   bool _click = false;
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     String formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
     String formattedTime = DateFormat('hh:mm a').format(DateTime.now());
+
+    final locationProvider = Provider.of<LocationProvider>(context);
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
@@ -55,58 +65,72 @@ class _HomePageState extends State<HomePage> {
                     ),
                   )
                 : const SizedBox.shrink(),
-            Positioned(
-              top: 30,
-              left: 10,
-              right: 10,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
+            Container(
+              child: Consumer<LocationProvider>(
+                builder: (context, locationProvider, child) {
+                  var locationcity;
+                  if (locationProvider.currentlocationName != null) {
+                    locationcity =
+                        locationProvider.currentlocationName!.locality;
+                  } else {
+                    locationcity = "Unknown Location";
+                  }
+
+                  return Positioned(
+                    top: 30,
+                    left: 10,
+                    right: 10,
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Icon(
-                          Icons.location_pin,
-                          color: Colors.red,
+                        Container(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.location_pin,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  AppText(
+                                    data: locationcity,
+                                    color: Colors.white,
+                                    fw: FontWeight.w700,
+                                    size: 18,
+                                  ),
+                                  AppText(
+                                    data: "Good Morning",
+                                    color: Colors.white,
+                                    fw: FontWeight.w400,
+                                    size: 14,
+                                  ),
+                                ],
+                              )
+                            ],
+                          ),
                         ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppText(
-                              data: "kerala",
-                              color: Colors.white,
-                              fw: FontWeight.w700,
-                              size: 18,
-                            ),
-                            AppText(
-                              data: "Good Morning",
-                              color: Colors.white,
-                              fw: FontWeight.w400,
-                              size: 14,
-                            ),
-                          ],
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _click = !_click;
+                              print("Button toggled: $_click");
+                              print("clicked");
+                            });
+                          },
+                          icon: Icon(
+                            _click == true ? Icons.close : Icons.search,
+                            size: 32,
+                          ),
                         )
                       ],
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _click = !_click;
-                        print("Button toggled: $_click");
-                        print("clicked");
-                      });
-                    },
-                    icon: Icon(
-                      _click == true ? Icons.close : Icons.search,
-                      size: 32,
-                    ),
-                  )
-                ],
+                  );
+                },
               ),
             ),
             Align(
